@@ -9,6 +9,16 @@ import type { ExpenseInput, Repo, TripInput, TripWithItems, User } from './repo'
 
 const env = import.meta.env;
 const continueUrl = () => ({ url: location.origin + location.pathname });
+
+/** 公開先のドメインが Firebase にまだ登録されていなくても、戻り先なしでメールを送る */
+async function withContinueUrl(send: (settings?: { url: string }) => Promise<void>) {
+  try {
+    await send(continueUrl());
+  } catch (err) {
+    if (!/continue-uri|unauthorized-domain/.test((err as { code?: string }).code ?? '')) throw err;
+    await send();
+  }
+}
 const toUser = (u: FbUser | null): User | null => (u ? { id: u.uid, email: u.email ?? '', verified: u.emailVerified } : null);
 
 type Stored<T> = Record<string, Omit<T, 'id'>> | null;
@@ -68,7 +78,7 @@ export function firebaseRepo(): Repo {
     },
     async signUp(email, password) {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(user, continueUrl());
+      await withContinueUrl(settings => sendEmailVerification(user, settings));
       return true;
     },
     async signOut() {
@@ -76,14 +86,15 @@ export function firebaseRepo(): Repo {
     },
     async sendPasswordReset(email) {
       try {
-        await sendPasswordResetEmail(auth, email, continueUrl());
+        await withContinueUrl(settings => sendPasswordResetEmail(auth, email, settings));
       } catch (err) {
         // 登録の有無を外部に知らせない
         if ((err as { code?: string }).code !== 'auth/user-not-found') throw err;
       }
     },
     async resendVerification() {
-      if (auth.currentUser) await sendEmailVerification(auth.currentUser, continueUrl());
+      const user = auth.currentUser;
+      if (user) await withContinueUrl(settings => sendEmailVerification(user, settings));
     },
     async refreshUser() {
       if (!auth.currentUser) return null;
