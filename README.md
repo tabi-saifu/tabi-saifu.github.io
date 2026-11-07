@@ -4,6 +4,7 @@
 
 - 利用者向けの説明: [manual.html](manual.html)（アプリ内の「使い方」からも開けます）
 - 管理者向けの公開手順: [docs/SETUP.md](docs/SETUP.md)
+- 要件の確認手順: [docs/CHECKLIST.md](docs/CHECKLIST.md)
 
 ## 構成
 
