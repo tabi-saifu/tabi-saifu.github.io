@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>たびさいふの使い方</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <link rel="stylesheet" href="/src/manual.css" />
+  </head>
+  <body>
+    <main class="manual">
+      <header class="m-head">
+        <div class="stamp" aria-hidden="true">¥</div>
+        <div>
+          <h1>たびさいふの使い方</h1>
+          <p>海外で使ったお金を、その場で日本円にして合計するアプリです。覚えることは4つだけです。</p>
+        </div>
+      </header>
+
+      <section class="m-step">
+        <div class="m-text">
+          <h2><b>1</b>はじめての登録</h2>
+          <ol>
+            <li>管理者から届いたURLを開きます。</li>
+            <li>「はじめて使う」を押し、メールアドレスとパスワード（8文字以上）を入れて「登録する」を押します。</li>
+            <li>確認メールが届いたら、メール内のリンクを押します。これで登録完了です。</li>
+          </ol>
+          <p class="m-tip"><b>スマホのホーム画面に追加すると便利です。</b>iPhoneはSafariの共有ボタンから「ホーム画面に追加」、Androidはメニューから「ホーム画面に追加」を選びます。</p>
+          <p class="m-tip">記録は本人にしか見えません。家族や他の利用者からも見えません。</p>
+        </div>
+      </section>
+
+      <section class="m-step">
+        <div class="m-text">
+          <h2><b>2</b>旅行を登録する</h2>
+          <ol>
+            <li>「＋ 新しい旅行を登録」を押します。</li>
+            <li>行き先の国を選びます。「ハワイ」「パリ」のように都市名でも探せます。</li>
+            <li>「この内容で登録」を押します。その国の通貨と最新の円相場は自動で設定されます。</li>
+          </ol>
+          <p class="m-tip">日付と手数料は空欄や初期値のままで大丈夫です。</p>
+        </div>
+        <figure class="m-screen" aria-label="旅行一覧の画面の例">
+          <button class="ticket" tabindex="-1" type="button">
+            <div class="ticket-main"><span class="ticket-flag">🇫🇷</span><div><strong>フランス旅行</strong><small>フランス・ユーロ</small></div></div>
+            <div class="ticket-stub"><small>5件</small><strong class="num">¥46,523</strong><small class="num">請求目安 ¥47,400</small></div>
+          </button>
+        </figure>
+      </section>
+
+      <section class="m-step">
+        <div class="m-text">
+          <h2><b>3</b>使った金額を記録する</h2>
+          <ol>
+            <li>旅行を開き、「＋ 使った金額を記録」を押します。</li>
+            <li>レシートの金額を現地のお金のまま入れます。日本円がすぐ表示されます。</li>
+            <li>何に使ったかとカードか現金かを選び、「記録する」を押します。</li>
+          </ol>
+          <p class="m-tip"><b>買う前の確認にも使えます。</b>金額を入れて日本円を見たら、✕で閉じれば記録されません。</p>
+          <p class="m-tip">まとめて入れるときは「続けて記録」が便利です。</p>
+        </div>
+        <figure class="m-screen" aria-label="金額入力の画面の例">
+          <div class="amount-box">
+            <div class="amount-line"><span class="amount-input num">24.50</span><span class="m-cur">EUR</span></div>
+            <div class="amount-jpy num"><span>日本円で</span><strong>¥4,537</strong></div>
+            <p class="rate-line">1EUR（ユーロ）= 185.19円</p>
+          </div>
+        </figure>
+      </section>
+
+      <section class="m-step">
+        <div class="m-text">
+          <h2><b>4</b>合計を見る・直す</h2>
+          <ul>
+            <li>旅行を開くと、一番上に合計が大きく出ます。下には日付ごとの明細が並びます。</li>
+            <li>「カード請求の目安」は、カード会社の手数料を上乗せした金額です。</li>
+            <li>明細を押すと、金額の修正や削除ができます。</li>
+          </ul>
+        </div>
+        <figure class="m-screen" aria-label="合計の画面の例">
+          <div class="hero">
+            <p class="hero-label" style="margin-top:0">ここまでに使った金額</p>
+            <p class="hero-total num">¥46,523</p>
+            <p class="hero-sub num">カード請求の目安 <b>¥47,400</b></p>
+          </div>
+        </figure>
+      </section>
+
+      <section class="m-step">
+        <div class="m-text">
+          <h2><b>5</b>帰国後、レポートをメールで受け取る</h2>
+          <ol>
+            <li>旅行を開き、下の「レポート」を押します。</li>
+            <li><b>Gmailの方：</b>「Gmailから自分に送る」を押します。初回だけGoogleの確認画面が出るので、ログイン中のアカウントを選んで許可します。</li>
+            <li><b>Gmail以外の方：</b>「メールアプリで自分に送る」を押します。メールアプリが開くので、宛先が自分になっていることを確かめて送信します。パソコンでは、保存されたPDFをメールに添付してください。</li>
+          </ol>
+          <p class="m-tip">送信元も宛先もあなた自身のメールアドレスです。送ったメールはあなたの「送信済み」にも残ります。</p>
+        </div>
+      </section>
+
+      <section class="m-faq">
+        <h2>困ったときは</h2>
+        <dl>
+          <dt>パスワードを忘れました</dt>
+          <dd>ログイン画面の「パスワードを忘れた」から再設定できます。</dd>
+          <dt>電波がなくて記録できません</dt>
+          <dd>記録には通信が必要です。入力内容は画面に残るので、電波のある場所で「記録する」を押してください。相場だけは前回の値が使えます。</dd>
+          <dt>実際の請求額と少し違います</dt>
+          <dd>アプリの金額は記録したときの相場による目安です。カード会社のレートや手数料、請求日の相場で変わります。</dd>
+          <dt>確認メールが届きません</dt>
+          <dd>迷惑メールフォルダを確認してください。それでも届かないときは少し時間をおくか、管理者にご連絡ください。</dd>
+        </dl>
+      </section>
+
+      <p class="m-print"><button class="ghost" type="button" id="print">このページを印刷・PDFで保存</button></p>
+    </main>
+    <script type="module" src="/src/manual.ts"></script>
+  </body>
+</html>

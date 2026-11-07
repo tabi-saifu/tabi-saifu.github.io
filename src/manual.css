@@ -1,0 +1,40 @@
+.manual { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 20px; }
+.m-head { display: flex; gap: 16px; align-items: center; }
+.m-head h1 { font-size: 1.625rem; }
+.m-head p { color: var(--muted); }
+.m-head .stamp { flex: none; }
+
+.m-step { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); padding-top: 16px; border-top: 1px solid var(--line); }
+.m-step h2, .m-faq h2 { font-size: 1.1875rem; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.m-step h2 b {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); font-size: 1rem;
+}
+.m-text ol, .m-text ul { padding-left: 1.4em; display: grid; gap: 4px; }
+.m-text ol { list-style: decimal; }
+.m-text ul { list-style: disc; }
+.m-tip { font-size: 0.875rem; color: var(--muted); margin-top: 8px; }
+.m-tip b { color: var(--ink); }
+.m-screen { margin: 0; align-self: center; pointer-events: none; }
+.m-cur { font-weight: 700; }
+.m-screen .amount-input { display: block; }
+
+.m-faq { padding-top: 16px; border-top: 1px solid var(--line); }
+.m-faq dl { margin: 0; display: grid; gap: 10px; }
+.m-faq dt { font-weight: 700; }
+.m-faq dd { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.m-print { max-width: 320px; }
+
+@media (min-width: 640px) {
+  .m-step:has(.m-screen) { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; gap: 24px; }
+}
+
+@media print {
+  :root { --paper: #fff; }
+  .manual { max-width: none; padding: 0; gap: 12px; font-size: 13px; }
+  .m-step { break-inside: avoid; }
+  .m-print { display: none; }
+  .m-step:has(.m-screen) { grid-template-columns: minmax(0, 1fr) 240px; gap: 18px; }
+  .hero, .ticket, .amount-box, .m-step h2 b { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
