@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "tabi_saifu": {
+      "users": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid && auth.token.email_verified === true",
+          ".write": "auth != null && auth.uid === $uid && auth.token.email_verified === true",
+          "trips": {
+            "$tripId": {
+              ".validate": "newData.hasChildren(['name', 'country_code', 'currency', 'card_fee_pct', 'created_at'])",
+              "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
+              "country_code": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z]{2}$/)" },
+              "currency": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z]{3}$/)" },
+              "start_date": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+              "end_date": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+              "card_fee_pct": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+              "created_at": { ".validate": "newData.isNumber()" },
+              "$other": { ".validate": false }
+            }
+          },
+          "expenses": {
+            "$tripId": {
+              ".validate": "newData.parent().parent().child('trips').child($tripId).exists()",
+              "$expenseId": {
+                ".validate": "newData.hasChildren(['spent_on', 'title', 'category', 'payment', 'amount_local', 'currency', 'rate_to_jpy', 'amount_jpy', 'created_at'])",
+                "spent_on": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+                "title": { ".validate": "newData.isString() && newData.val().length <= 80" },
+                "category": { ".validate": "newData.isString() && newData.val().matches(/^(food|shopping|transport|hotel|sightseeing|other)$/)" },
+                "payment": { ".validate": "newData.isString() && newData.val().matches(/^(card|cash)$/)" },
+                "amount_local": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() < 1000000000000" },
+                "currency": { ".validate": "newData.isString() && newData.val().matches(/^[A-Z]{3}$/)" },
+                "rate_to_jpy": { ".validate": "newData.isNumber() && newData.val() > 0" },
+                "rate_date": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+                "amount_jpy": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+                "created_at": { ".validate": "newData.isNumber()" },
+                "$other": { ".validate": false }
+              }
+            }
+          },
+          "$other": { ".validate": false }
+        }
+      }
+    }
+  }
+}

@@ -49,7 +49,7 @@ const save = (s: Store) => {
     // 同上
   }
 };
-const asUser = (email: string | null): User | null => (email ? { id: email, email } : null);
+const asUser = (email: string | null): User | null => (email ? { id: email, email, verified: true } : null);
 
 const listeners = new Set<(e: AuthEvent) => void>();
 const emit = (email: string | null) => listeners.forEach(l => l({ user: asUser(email) }));
@@ -91,7 +91,10 @@ export const demoRepo: Repo = {
     emit(null);
   },
   async sendPasswordReset() {},
-  async updatePassword() {},
+  async resendVerification() {},
+  async refreshUser() {
+    return asUser(load().session);
+  },
 
   async listTrips() {
     const s = load();
@@ -148,7 +151,7 @@ export const demoRepo: Repo = {
     if (!out) throw new Error('not found');
     return out;
   },
-  async deleteExpense(id) {
+  async deleteExpense(_tripId, id) {
     const s = load();
     const me = owner();
     s.expenses = s.expenses.filter(e => !(e.id === id && e.owner === me));

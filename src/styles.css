@@ -146,6 +146,7 @@ input:focus { border-color: var(--ink); outline: none; }
 .auth-hero p { color: var(--muted); }
 .auth-title { font-size: 1.25rem; }
 .auth-foot { text-align: center; color: var(--muted); font-size: 0.8125rem; }
+.mail { overflow-wrap: anywhere; }
 .stamp {
   width: 64px; height: 64px;
   display: grid; place-items: center;

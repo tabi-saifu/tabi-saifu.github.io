@@ -90,7 +90,7 @@ export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose,
     if (!expense) return;
     setBusy(true);
     try {
-      await repo.deleteExpense(expense.id);
+      await repo.deleteExpense(expense.trip_id, expense.id);
       onDeleted(expense.id);
       toast('削除しました');
       onClose();

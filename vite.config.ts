@@ -3,10 +3,10 @@ import { defineConfig, type Plugin } from 'vite';
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' https://accounts.google.com/gsi/client",
+  "script-src 'self' https://accounts.google.com/gsi/client https://*.firebasedatabase.app https://*.firebaseio.com",
   "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://open.er-api.com https://api.frankfurter.dev https://gmail.googleapis.com https://www.googleapis.com https://accounts.google.com/gsi/",
-  'frame-src https://accounts.google.com/gsi/',
+  "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com https://open.er-api.com https://api.frankfurter.dev https://gmail.googleapis.com https://www.googleapis.com https://accounts.google.com/gsi/",
+  'frame-src https://accounts.google.com/gsi/ https://*.firebaseapp.com',
   "img-src 'self' data:",
   "font-src 'self'",
   "base-uri 'none'",

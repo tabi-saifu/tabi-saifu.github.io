@@ -5,3 +5,7 @@ dist
 .env.*.local
 .DS_Store
 test-results
+# npm run assets で生成する
+public/fonts/*.ttf
+public/icon-*.png
+package-lock.json

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { friendlyError, hasBackend, isDemo, loadRepo, type Repo, type User } from './lib/repo';
-import { AuthScreen, NewPasswordScreen } from './screens/AuthScreen';
+import { AuthScreen } from './screens/AuthScreen';
 import { TripScreen } from './screens/TripScreen';
 import { TripsScreen } from './screens/TripsScreen';
+import { VerifyScreen } from './screens/VerifyScreen';
 import { Toast, type ToastFn } from './screens/ui';
 
 const tripFromHash = () => /^#\/trip\/([\w-]+)$/.exec(location.hash)?.[1] ?? null;
@@ -10,7 +11,6 @@ const tripFromHash = () => /^#\/trip\/([\w-]+)$/.exec(location.hash)?.[1] ?? nul
 export function App() {
   const [repo, setRepo] = useState<Repo | null>(null);
   const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [recovery, setRecovery] = useState(false);
   const [tripId, setTripId] = useState(tripFromHash);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
 
@@ -27,10 +27,7 @@ export function App() {
     let off = () => {};
     loadRepo().then(r => {
       setRepo(r);
-      off = r.onAuth(({ user: next, recovery: rec }) => {
-        setUser(next);
-        if (rec) setRecovery(true);
-      });
+      off = r.onAuth(({ user: next }) => setUser(next));
       r.currentUser().then(setUser).catch(err => {
         showToast(friendlyError(err));
         setUser(null);
@@ -55,10 +52,10 @@ export function App() {
   if (!repo || user === undefined) return <main className="centered"><div className="spinner" aria-label="読み込み中" /></main>;
 
   let screen;
-  if (recovery && user) {
-    screen = <NewPasswordScreen repo={repo} onDone={() => { setRecovery(false); showToast('パスワードを変更しました'); }} />;
-  } else if (!user) {
+  if (!user) {
     screen = <AuthScreen repo={repo} />;
+  } else if (!user.verified) {
+    screen = <VerifyScreen repo={repo} user={user} onVerified={u => { setUser(u); showToast('メールの確認が済みました'); }} />;
   } else if (tripId) {
     // 利用者が変わったら画面の状態を持ち越さない
     screen = <TripScreen key={`${user.id}:${tripId}`} repo={repo} user={user} tripId={tripId} onBack={() => go(null)} toast={showToast} />;

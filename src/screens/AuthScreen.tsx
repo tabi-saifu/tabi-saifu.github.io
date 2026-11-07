@@ -38,9 +38,7 @@ export function AuthScreen({ repo }: { repo: Repo }) {
     const address = email.trim();
     try {
       if (mode === 'login') await repo.signIn(address, password);
-      if (mode === 'signup' && (await repo.signUp(address, password))) {
-        setNotice(`${address} に確認メールを送りました。メール内のリンクを押すと登録が完了します。`);
-      }
+      if (mode === 'signup') await repo.signUp(address, password);
       if (mode === 'reset') {
         await repo.sendPasswordReset(address);
         setNotice('登録されているメールアドレスなら、再設定の案内が届きます。');
@@ -88,36 +86,6 @@ export function AuthScreen({ repo }: { repo: Repo }) {
       {mode === 'reset' && <button className="link center" onClick={() => change('login')}>ログインに戻る</button>}
       <p className="auth-foot">記録はあなただけに見えます。ほかの利用者からは見えません。<br />
         <a href="./manual.html" target="_blank" rel="noreferrer">使い方を見る</a></p>
-    </main>
-  );
-}
-
-export function NewPasswordScreen({ repo, onDone }: { repo: Repo; onDone: () => void }) {
-  const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit(ev: FormEvent) {
-    ev.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await repo.updatePassword(password);
-      onDone();
-    } catch (err) {
-      setError(friendlyError(err));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <main className="auth">
-      <h2 className="auth-title">新しいパスワード</h2>
-      <form onSubmit={submit} className="stack">
-        <PasswordField value={password} onChange={setPassword} autoComplete="new-password" label="新しいパスワード（8文字以上）" />
-        <ErrorNote text={error} />
-        <button className="primary" disabled={busy}>{busy ? '処理中…' : '変更する'}</button>
-      </form>
     </main>
   );
 }
