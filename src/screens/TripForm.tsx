@@ -140,10 +140,14 @@ export function TripForm({ repo, user, trip, onClose, onSaved, onDeleted, toast 
             <fieldset className="field">
               <legend>だれと行きますか？</legend>
               <div className="segmented" role="group" aria-label="だれと行くか">
-                <button type="button" className={!together ? 'on' : ''} aria-pressed={!together} onClick={() => setTogether(false)}>ひとりで</button>
-                <button type="button" className={together ? 'on' : ''} aria-pressed={together} onClick={() => setTogether(true)}>みんなで（割り勘あり）</button>
+                <button type="button" className={!together ? 'on' : ''} aria-pressed={!together} onClick={() => setTogether(false)}>👤 ひとりで</button>
+                <button type="button" className={together ? 'on' : ''} aria-pressed={together} onClick={() => setTogether(true)}>👥 みんなで</button>
               </div>
-              {together && <small className="hint">登録後に出る招待コードを一緒に行く人に伝えます。割り勘の記録はみんなで、自分だけの記録は自分だけが見られます。</small>}
+              <small className="hint">
+                {together
+                  ? '割り勘ができます。登録後に出る招待コードを一緒に行く人に伝えます。割り勘の記録はみんなで、自分だけの記録は自分だけが見られます。'
+                  : '自分の出費だけを記録します。友だちや家族と割り勘するときは「みんなで」を選びます。'}
+              </small>
             </fieldset>
           )}
           {!trip && together && (

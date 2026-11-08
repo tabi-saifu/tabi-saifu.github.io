@@ -122,7 +122,7 @@ describe('利用の流れ', () => {
     click('＋ 旅行を登録');
     fireEvent.change(await screen.findByPlaceholderText(/国名や都市名/), { target: { value: 'ソウル' } });
     click(/韓国/);
-    click('みんなで（割り勘あり）');
+    click('👥 みんなで');
     fireEvent.change(screen.getByLabelText('一緒に行く人に見えるあなたの名前'), { target: { value: 'はなこ' } });
     click('この内容で登録');
     await screen.findByRole('tab', { name: 'みんなの割り勘' });
