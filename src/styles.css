@@ -360,9 +360,10 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 body:has(dialog[open]) { overflow: hidden; }
 .sheet { overflow-x: hidden; overscroll-behavior: contain; touch-action: pan-y; box-sizing: border-box; max-width: min(560px, 100vw); }
 .sheet * { min-width: 0; }
-/* iPhone の日付入力は幅を譲らないので、枠に収める */
-input[type='date'] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; display: block; text-align: left; }
-input[type='date']::-webkit-date-and-time-value { text-align: left; }
+/* 日付入力: 端末本来の表示（iPhone でも上下中央にそろう）のまま、枠からはみ出さないようにする。
+   見た目を消す指定（appearance: none）は iPhone で文字が上に寄るので使わない */
+input[type='date'] { min-width: 0; max-width: 100%; width: 100%; height: 50px; display: block; line-height: normal; }
+input[type='date']::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .row > * { min-width: 0; }
 .row input[type='date'] { padding: 0 10px; }
 /* ボタンの文字は枠からはみ出さず、必要なら2行に収める */
