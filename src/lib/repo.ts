@@ -13,6 +13,12 @@ export type TripInput = Omit<Trip, 'id' | 'group'>;
 export type ExpenseInput = Omit<Expense, 'id' | 'amount_jpy'>;
 export type AuthEvent = { user: User | null };
 
+export interface Profile {
+  /** あなたの国（割り勘をこの国の通貨でも表示する）。初期値は日本 */
+  home_country: string;
+}
+export const DEFAULT_PROFILE: Profile = { home_country: 'JP' };
+
 export interface Repo {
   currentUser(): Promise<User | null>;
   onAuth(cb: (e: AuthEvent) => void): () => void;
@@ -24,6 +30,9 @@ export interface Repo {
   resendVerification(): Promise<void>;
   /** 確認メールのリンクを押した後に、最新の状態を取り直す */
   refreshUser(): Promise<User | null>;
+
+  getProfile(): Promise<Profile>;
+  saveProfile(profile: Profile): Promise<void>;
 
   listTrips(): Promise<TripWithItems[]>;
   /** group を渡すと、みんなで使う旅行（割り勘あり）を作る。name は仲間に見える自分の呼び名 */

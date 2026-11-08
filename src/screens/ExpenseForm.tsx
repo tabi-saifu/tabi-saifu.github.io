@@ -3,7 +3,7 @@ import { CATEGORIES, parseAmount, rateText, toJpy, todayIso, yen, type Category,
 import { allCurrencies, currencyLabel } from '../lib/countries';
 import { getRates, type RateTable } from '../lib/rates';
 import { friendlyError, type Repo } from '../lib/repo';
-import { ConfirmButton, ErrorNote, Sheet, type ToastFn } from './ui';
+import { ConfirmButton, DateField, ErrorNote, Sheet, type ToastFn } from './ui';
 
 export function ExpenseForm({ repo, trip, me, defaultShared, expense, rates, lastCurrency, onClose, onSaved, onDeleted, toast }: {
   repo: Repo;
@@ -209,7 +209,7 @@ export function ExpenseForm({ repo, trip, me, defaultShared, expense, rates, las
         <details className="more" open={moreOpen || undefined} onToggle={e => setMoreOpen(e.currentTarget.open)}>
           <summary>日付・相場を変える</summary>
           <div className="row">
-            <label className="field"><span>使った日</span><input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+            <DateField label="使った日" value={date} onChange={setDate} />
             <label className="field">
               <span>1{currency}あたりの円</span>
               <input inputMode="decimal" value={rateOverride} onChange={e => setRateOverride(e.target.value)}

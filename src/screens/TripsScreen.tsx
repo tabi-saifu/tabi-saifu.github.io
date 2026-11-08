@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { cardEstimate, periodLabel, totalJpy, yen } from '../lib/calc';
 import { countryByCode, currencyLabel, flag } from '../lib/countries';
-import { friendlyError, type Repo, type TripWithItems, type User } from '../lib/repo';
+import { friendlyError, type Profile, type Repo, type TripWithItems, type User } from '../lib/repo';
+import { ProfileForm } from './ProfileForm';
 import { AirmailArt, Logo } from './art';
 import { JoinForm, TripForm } from './TripForm';
 import { ErrorNote, type ToastFn } from './ui';
 
-export function TripsScreen({ repo, user, onOpen, toast }: {
-  repo: Repo; user: User; onOpen: (id: string) => void; toast: ToastFn;
+export function TripsScreen({ repo, user, profile, onProfileChange, onOpen, toast }: {
+  repo: Repo; user: User; profile: Profile; onProfileChange: (p: Profile) => void; onOpen: (id: string) => void; toast: ToastFn;
 }) {
+  const [editingProfile, setEditingProfile] = useState(false);
+  const home = countryByCode(profile.home_country);
   const [trips, setTrips] = useState<TripWithItems[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -32,6 +35,11 @@ export function TripsScreen({ repo, user, onOpen, toast }: {
       <section className="greeting">
         <p className="whoami">{user.email}</p>
         <h2>旅のおさいふ</h2>
+        <button type="button" className="home-chip" onClick={() => setEditingProfile(true)}>
+          <span aria-hidden="true">{home ? flag(home.code) : '🏳'}</span>
+          あなたの国: {home?.name ?? '未設定'}（{home?.currency ?? 'JPY'}）
+          <span className="link">変更</span>
+        </button>
       </section>
 
       <ErrorNote text={error} />
@@ -83,6 +91,9 @@ export function TripsScreen({ repo, user, onOpen, toast }: {
           toast(trip.group ? '旅行を登録しました。設定から招待コードを確認できます' : '旅行を登録しました');
           onOpen(trip.id);
         }} />
+      )}
+      {editingProfile && (
+        <ProfileForm repo={repo} profile={profile} toast={toast} onClose={() => setEditingProfile(false)} onSaved={onProfileChange} />
       )}
       {joining && (
         <JoinForm repo={repo} user={user} onClose={() => setJoining(false)} onJoined={id => {

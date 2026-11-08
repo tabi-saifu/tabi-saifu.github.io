@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 // 画面の主要な流れを、デモ用データ層で通しで確認する
@@ -156,8 +156,10 @@ describe('利用の流れ', () => {
     click('記録する');
     await waitFor(() => expect(screen.queryByLabelText('現地通貨の金額')).toBeNull());
     expect(total()).toBe('¥1,500');
-    expect((await screen.findByText(/^¥[\d,]+ 多く払っている$/)).textContent).toBe('¥1,500 多く払っている');
-    expect(screen.getByText(/はなこ → じろう（あなた）/).textContent).toContain('¥1,500');
+    // 割り勘は現地通貨（KRW）を主に、あなたの国の通貨（初期値は日本円）を（ ）で添える
+    expect(await screen.findByLabelText('15,000 KRW（¥1,500） 多く払っている')).toBeTruthy();
+    expect(screen.getByLabelText('はなこ → じろう（あなた） 15,000 KRW（¥1,500）')).toBeTruthy();
+    expect(screen.getByText(/負担 /, { selector: 'small' }).textContent).toBe('負担 15,000 KRW（¥1,500）');
 
     // はなこ: 割り勘はじろうの分も見え、自分の負担は 100 円 + 1,500 円
     await logout();
@@ -165,7 +167,17 @@ describe('利用の流れ', () => {
     location.hash = groupHash;
     window.dispatchEvent(new HashChangeEvent('hashchange'));
     await screen.findByText('焼肉');
-    expect(screen.getByText(/少ない/).textContent).toBe('¥1,500 少ない');
+    expect(screen.getByLabelText('15,000 KRW（¥1,500） 少ない')).toBeTruthy();
     expect(total()).toBe('¥1,600');
+
+    // あなたの国を韓国にすると、割り勘は韓国ウォンだけで出る（現地通貨と同じため）
+    back();
+    fireEvent.click(await screen.findByRole('button', { name: /あなたの国: 日本/ }));
+    fireEvent.change(await screen.findByPlaceholderText(/国名で検索/), { target: { value: '韓国' } });
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /韓国/ }));
+    await screen.findByRole('button', { name: /あなたの国: 韓国（KRW）/ });
+    location.hash = groupHash;
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(await screen.findByLabelText('15,000 KRW 少ない')).toBeTruthy();
   });
 });

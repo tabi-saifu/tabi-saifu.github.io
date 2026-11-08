@@ -1,5 +1,5 @@
 import { myBurden, toJpy, type Expense, type Trip } from './calc';
-import { newInviteCode, normalizeCode, type AuthEvent, type Repo, type TripInput, type TripWithItems, type User } from './repo';
+import { DEFAULT_PROFILE, newInviteCode, normalizeCode, type AuthEvent, type Profile, type Repo, type TripInput, type TripWithItems, type User } from './repo';
 
 // 動作確認・マニュアル撮影専用。VITE_DEMO=1 のときだけ読み込まれ、本番には入らない。
 // 本番の Realtime Database と同じく「本人の場所」と「参加者だけの場所」を分けて持つ。
@@ -20,6 +20,7 @@ interface Store {
   groups: DemoGroup[];
   /** 参加しているみんなの旅行での、自分だけの出費 */
   gexpenses: Owned<Expense>[];
+  profiles?: Record<string, Profile>;
 }
 
 const KEY = 'tabi-saifu.demo';
@@ -144,6 +145,14 @@ export const demoRepo: Repo = {
   async resendVerification() {},
   async refreshUser() {
     return asUser(load().session);
+  },
+  async getProfile() {
+    return load().profiles?.[owner()] ?? DEFAULT_PROFILE;
+  },
+  async saveProfile(profile) {
+    const s = load();
+    s.profiles = { ...(s.profiles ?? {}), [owner()]: profile };
+    save(s);
   },
 
   async listTrips() {

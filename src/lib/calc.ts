@@ -184,6 +184,34 @@ export function money(n: number, currency: string) {
   return `${n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: 2 })} ${currency}`;
 }
 
+/** 通貨ごとの小数の桁数（円・ウォンは0、ユーロ・ドルは2 など） */
+export function fractionDigits(currency: string) {
+  try {
+    return new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2;
+  } catch {
+    return 2;
+  }
+}
+
+/** 金額をその通貨の書き方で。円は「¥1,234」、それ以外は「12.50 EUR」 */
+export function formatMoney(amount: number, currency: string) {
+  if (currency === 'JPY') return yen(amount);
+  const d = fractionDigits(currency);
+  return `${amount.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })} ${currency}`;
+}
+
+/**
+ * 旅行の割り勘で使う「1現地通貨あたりの円」。
+ * その通貨で記録した割り勘の実際の相場の平均を使い、記録がなければ最新の相場を使う。
+ */
+export function tripRate(items: Expense[], currency: string, live?: number | null) {
+  if (currency === 'JPY') return 1;
+  const same = items.filter(e => e.shared && e.currency === currency);
+  const local = same.reduce((s, e) => s + Number(e.amount_local), 0);
+  if (local > 0) return same.reduce((s, e) => s + Number(e.amount_jpy), 0) / local;
+  return live ?? null;
+}
+
 export function rateText(rate: number) {
   const digits = rate >= 100 ? 2 : rate >= 1 ? 3 : 4;
   return rate.toLocaleString('ja-JP', { maximumFractionDigits: digits });

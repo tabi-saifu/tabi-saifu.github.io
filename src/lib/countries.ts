@@ -7,6 +7,7 @@ export interface Country {
 }
 
 export const COUNTRIES: Country[] = [
+  { code: 'JP', name: '日本', currency: 'JPY', alias: 'にほん にっぽん japan' },
   { code: 'KR', name: '韓国', currency: 'KRW', alias: 'かんこく ソウル プサン korea' },
   { code: 'TW', name: '台湾', currency: 'TWD', alias: 'たいわん 台北 taiwan' },
   { code: 'US', name: 'アメリカ', currency: 'USD', alias: 'ハワイ グアム 米国 usa america hawaii guam' },

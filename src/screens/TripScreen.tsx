@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
-  balances, byCategory, byDay, cardEstimate, categoryOf, dayLabel, money, myBurden, periodLabel, rateText, settlements,
-  sharesOf, totalJpy, yen, type Expense, type Trip,
+  balances, byCategory, byDay, cardEstimate, categoryOf, dayLabel, formatMoney, money, myBurden, periodLabel, rateText,
+  settlements, sharesOf, totalJpy, tripRate, yen, type Expense, type Trip,
 } from '../lib/calc';
-import { flag } from '../lib/countries';
+import { countryByCode, flag } from '../lib/countries';
 import { getRates, type RateTable } from '../lib/rates';
 import { friendlyError, type Repo, type User } from '../lib/repo';
 import { ExpenseForm } from './ExpenseForm';
@@ -14,8 +14,43 @@ import { ErrorNote, type ToastFn } from './ui';
 
 type Tab = 'shared' | 'mine';
 
+/**
+ * 割り勘の金額の書き方。現地通貨を主に、あなたの国の通貨を（ ）で添える。
+ * 計算は円で行い、記録時の相場（現地通貨）と最新の相場（あなたの国の通貨）で換算する。
+ */
+function useSplitMoney(trip: Trip, expenses: Expense[], rates: RateTable | null, homeCountry: string) {
+  const homeCurrency = countryByCode(homeCountry)?.currency ?? 'JPY';
+  const localRate = tripRate(expenses, trip.currency, rates?.toJpy[trip.currency]);
+  const homeRate = homeCurrency === 'JPY' ? 1 : rates?.toJpy[homeCurrency] ?? null;
+  const local = (jpy: number) => (localRate ? formatMoney(jpy / localRate, trip.currency) : yen(jpy));
+  const home = (jpy: number) => (homeRate ? formatMoney(jpy / homeRate, homeCurrency) : null);
+  const sub = (jpy: number) => (homeCurrency !== trip.currency ? home(jpy) : null);
+  return {
+    homeCurrency,
+    local,
+    sub,
+    both: (jpy: number) => {
+      const h = sub(jpy);
+      return h ? `${local(jpy)}（${h}）` : local(jpy);
+    },
+  };
+}
+
+/** 現地通貨の金額と、（ ）付きのあなたの国の通貨を、途中で折り返さないかたまりで並べる */
+function SplitAmount({ jpy, m }: { jpy: number; m: SplitMoney }) {
+  const h = m.sub(jpy);
+  return (
+    <span className="split-amount num">
+      <span className="nowrap">{m.local(jpy)}</span>
+      {h && <span className="nowrap sub">（{h}）</span>}
+    </span>
+  );
+}
+
+type SplitMoney = ReturnType<typeof useSplitMoney>;
+
 /** 割り勘で、だれがどれだけ多く払っているか */
-function SettleCard({ trip, expenses, me }: { trip: Trip; expenses: Expense[]; me: string }) {
+function SettleCard({ trip, expenses, me, money: m }: { trip: Trip; expenses: Expense[]; me: string; money: SplitMoney }) {
   const rows = balances(expenses, trip.group!.members);
   const transfers = settlements(rows);
   const nameOf = (uid: string, name: string) => (uid === me ? `${name}（あなた）` : name);
@@ -30,10 +65,17 @@ function SettleCard({ trip, expenses, me }: { trip: Trip; expenses: Expense[]; m
           <li key={r.uid}>
             <Avatar uid={r.uid} name={r.name} size={34} />
             <span className="settle-name">{r.name}{r.uid === me && <small className="me-tag">あなた</small>}</span>
-            <strong className={`settle-net num ${r.net > 0 ? 'plus' : r.net < 0 ? 'minus' : ''}`}>
-              {r.net > 0 ? `${yen(r.net)} 多く払っている` : r.net < 0 ? `${yen(-r.net)} 少ない` : 'ちょうど'}
+            <strong className={`settle-net num ${r.net > 0 ? 'plus' : r.net < 0 ? 'minus' : ''}`} aria-label={
+              r.net > 0 ? `${m.both(r.net)} 多く払っている` : r.net < 0 ? `${m.both(-r.net)} 少ない` : 'ちょうど'
+            }>
+              {r.net === 0 ? 'ちょうど' : (
+                <>
+                  <span className="net-label">{r.net > 0 ? '多く払っている' : '少ない'}</span>
+                  <SplitAmount jpy={Math.abs(r.net)} m={m} />
+                </>
+              )}
             </strong>
-            <span className="settle-detail num">払った {yen(r.paid)}・負担 {yen(r.owed)}</span>
+            <span className="settle-detail num">払った {m.local(r.paid)}・負担 {m.local(r.owed)}</span>
           </li>
         ))}
       </ul>
@@ -41,8 +83,12 @@ function SettleCard({ trip, expenses, me }: { trip: Trip; expenses: Expense[]; m
         <div className="settle-plan">
           <p className="settle-plan-title">こうすると精算できます</p>
           {transfers.map((t, i) => (
-            <p key={i} className="num">{nameOf(t.from.uid, t.from.name)} → {nameOf(t.to.uid, t.to.name)}　<b>{yen(t.amount)}</b></p>
+            <p key={i} className="transfer" aria-label={`${nameOf(t.from.uid, t.from.name)} → ${nameOf(t.to.uid, t.to.name)} ${m.both(t.amount)}`}>
+              <span>{nameOf(t.from.uid, t.from.name)} → {nameOf(t.to.uid, t.to.name)}</span>
+              <b><SplitAmount jpy={t.amount} m={m} /></b>
+            </p>
           ))}
+          <p className="settle-note">金額は記録したときの相場で換算した目安です。（ ）内はあなたの国の通貨（{m.homeCurrency}）です。</p>
         </div>
       ) : (
         <p className="settle-plan-title">貸し借りはありません</p>
@@ -51,8 +97,8 @@ function SettleCard({ trip, expenses, me }: { trip: Trip; expenses: Expense[]; m
   );
 }
 
-export function TripScreen({ repo, user, tripId, onBack, toast }: {
-  repo: Repo; user: User; tripId: string; onBack: () => void; toast: ToastFn;
+export function TripScreen({ repo, user, tripId, homeCountry, onBack, toast }: {
+  repo: Repo; user: User; tripId: string; homeCountry: string; onBack: () => void; toast: ToastFn;
 }) {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -102,6 +148,7 @@ export function TripScreen({ repo, user, tripId, onBack, toast }: {
   );
   const days = useMemo(() => byDay(shown), [shown]);
   const cats = useMemo(() => byCategory(burden), [burden]);
+  const splitMoney = useSplitMoney(trip ?? ({ currency: 'JPY' } as Trip), expenses, rates, homeCountry);
 
   if (notFound) {
     return (
@@ -182,7 +229,7 @@ export function TripScreen({ repo, user, tripId, onBack, toast }: {
           </button>
         </div>
       )}
-      {group && tab === 'shared' && <SettleCard trip={trip} expenses={expenses} me={user.id} />}
+      {group && tab === 'shared' && <SettleCard trip={trip} expenses={expenses} me={user.id} money={splitMoney} />}
       {group && tab === 'mine' && <p className="note tab-note">ここに入れた記録は、一緒に行く人には見えません。</p>}
 
       <ErrorNote text={error} />
@@ -214,7 +261,7 @@ export function TripScreen({ repo, user, tripId, onBack, toast }: {
                         </span>
                         <span className="item-jpy num">
                           {yen(e.amount_jpy)}
-                          {myShare !== null && <small>負担 {yen(myShare)}</small>}
+                          {myShare !== null && <small>負担 {splitMoney.both(myShare)}</small>}
                         </span>
                       </button>
                     </li>

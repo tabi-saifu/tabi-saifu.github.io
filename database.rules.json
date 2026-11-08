@@ -75,6 +75,14 @@
               }
             }
           },
+          "profile": {
+            "home_country": {
+              ".validate": "newData.isString() && newData.val().matches(/^[A-Z]{2}$/)"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
           "groups": {
             "$gid": {
               ".validate": "newData.val() === true"

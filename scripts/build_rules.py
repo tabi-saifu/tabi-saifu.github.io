@@ -73,6 +73,10 @@ rules = {
                         ".validate": "newData.parent().parent().child('trips').child($tripId).exists()",
                         "$expenseId": expense_fields(False),
                     }},
+                    "profile": {
+                        "home_country": {".validate": "newData.isString() && newData.val().matches(/^[A-Z]{2}$/)"},
+                        "$other": {".validate": False},
+                    },
                     "groups": {"$gid": {".validate": "newData.val() === true"}},
                     "gexpenses": {"$gid": {
                         # 自分だけの出費は、参加している旅行にしか付けられない

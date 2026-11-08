@@ -4,7 +4,7 @@ import { COUNTRIES, POPULAR, countryByCode, currencyLabel, flag, searchCountries
 import { getRates, type RateTable } from '../lib/rates';
 import { friendlyError, type Repo, type User } from '../lib/repo';
 import { Avatar } from './art';
-import { ConfirmButton, ErrorNote, Sheet, type ToastFn } from './ui';
+import { ConfirmButton, DateField, ErrorNote, Sheet, type ToastFn } from './ui';
 
 export const defaultNickname = (user: User) => user.email.split('@')[0].slice(0, 20);
 
@@ -161,8 +161,8 @@ export function TripForm({ repo, user, trip, onClose, onSaved, onDeleted, toast 
             <input value={name} maxLength={60} onChange={e => { setName(e.target.value); setNameEdited(true); }} />
           </label>
           <div className="row">
-            <label className="field"><span>出発日（任意）</span><input type="date" value={start} onChange={e => setStart(e.target.value)} /></label>
-            <label className="field"><span>帰国日（任意）</span><input type="date" value={end} onChange={e => setEnd(e.target.value)} /></label>
+            <DateField label="出発日（任意）" value={start} onChange={setStart} />
+            <DateField label="帰国日（任意）" value={end} onChange={setEnd} />
           </div>
           <label className="field">
             <span>カードの海外手数料の目安（%）</span>

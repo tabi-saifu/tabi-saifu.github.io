@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { balances, byCategory, byDay, cardEstimate, myBurden, parseAmount, settlements, sharesOf, toJpy, totalJpy, type Expense } from '../src/lib/calc';
+import { balances, byCategory, byDay, cardEstimate, formatMoney, myBurden, parseAmount, settlements, sharesOf, toJpy, totalJpy, tripRate, type Expense } from '../src/lib/calc';
 import { buildMime, sameMailbox } from '../src/lib/mail';
 
 const e = (over: Partial<Expense>): Expense => ({
@@ -37,6 +37,22 @@ describe('割り勘', () => {
       ['さぶろう', 'はなこ', 4000],
       ['じろう', 'はなこ', 1000],
     ]);
+  });
+
+  it('通貨ごとの書き方（小数の桁）', () => {
+    expect(formatMoney(1500, 'JPY')).toBe('¥1,500');
+    expect(formatMoney(15000, 'KRW')).toBe('15,000 KRW');
+    expect(formatMoney(8.104, 'EUR')).toBe('8.10 EUR');
+  });
+
+  it('割り勘の換算は、記録したときの相場の平均を使う', () => {
+    const items = [
+      e({ currency: 'KRW', amount_local: 30000, amount_jpy: 3000, shared: { paid_by: 'a', split: ['a', 'b'] } }),
+      e({ currency: 'KRW', amount_local: 10000, amount_jpy: 1100, shared: { paid_by: 'b', split: ['a', 'b'] } }),
+    ];
+    expect(tripRate(items, 'KRW', 0.2)).toBeCloseTo(4100 / 40000);
+    expect(tripRate([], 'KRW', 0.2)).toBe(0.2);
+    expect(tripRate(items, 'JPY')).toBe(1);
   });
 
   it('全員が同じだけ払っていれば精算はない', () => {

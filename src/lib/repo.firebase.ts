@@ -5,7 +5,7 @@ import {
 } from 'firebase/auth';
 import { get, getDatabase, push, ref, serverTimestamp, update } from 'firebase/database';
 import { myBurden, toJpy, type Expense, type Member, type Trip } from './calc';
-import { newInviteCode, normalizeCode, type ExpenseInput, type Repo, type TripInput, type TripWithItems, type User } from './repo';
+import { DEFAULT_PROFILE, newInviteCode, normalizeCode, type ExpenseInput, type Repo, type TripInput, type TripWithItems, type User } from './repo';
 
 const env = import.meta.env;
 const continueUrl = () => ({ url: location.origin + location.pathname });
@@ -146,6 +146,14 @@ export function firebaseRepo(): Repo {
       // 確認済みの状態をデータベース側の判定にも反映させる
       await auth.currentUser.getIdToken(true);
       return toUser(auth.currentUser);
+    },
+
+    async getProfile() {
+      const snap = await get(at(`/users/${uid()}/profile`));
+      return { ...DEFAULT_PROFILE, ...(snap.val() ?? {}) };
+    },
+    async saveProfile(profile) {
+      await update(at(`/users/${uid()}/profile`), { home_country: profile.home_country });
     },
 
     async listTrips() {

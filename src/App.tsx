@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { friendlyError, hasBackend, isDemo, loadRepo, type Repo, type User } from './lib/repo';
+import { DEFAULT_PROFILE, friendlyError, hasBackend, isDemo, loadRepo, type Profile, type Repo, type User } from './lib/repo';
 import { AuthScreen } from './screens/AuthScreen';
 import { TripScreen } from './screens/TripScreen';
 import { TripsScreen } from './screens/TripsScreen';
@@ -13,6 +13,7 @@ export function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [tripId, setTripId] = useState(tripFromHash);
   const [toast, setToast] = useState<{ text: string; key: number } | null>(null);
+  const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
 
   const showToast: ToastFn = useCallback(text => setToast({ text, key: Date.now() }), []);
 
@@ -36,6 +37,13 @@ export function App() {
     return () => off();
   }, [showToast]);
 
+  // 利用者が変わるたびに、その人の「あなたの国」を読み直す
+  useEffect(() => {
+    if (!repo || !user?.verified) return;
+    setProfile(DEFAULT_PROFILE);
+    repo.getProfile().then(setProfile).catch(() => setProfile(DEFAULT_PROFILE));
+  }, [repo, user]);
+
   const go = useCallback((id: string | null) => {
     location.hash = id ? `#/trip/${id}` : '';
     window.scrollTo(0, 0);
@@ -58,9 +66,9 @@ export function App() {
     screen = <VerifyScreen repo={repo} user={user} onVerified={u => { setUser(u); showToast('メールの確認が済みました'); }} />;
   } else if (tripId) {
     // 利用者が変わったら画面の状態を持ち越さない
-    screen = <TripScreen key={`${user.id}:${tripId}`} repo={repo} user={user} tripId={tripId} onBack={() => go(null)} toast={showToast} />;
+    screen = <TripScreen key={`${user.id}:${tripId}`} repo={repo} user={user} tripId={tripId} homeCountry={profile.home_country} onBack={() => go(null)} toast={showToast} />;
   } else {
-    screen = <TripsScreen key={user.id} repo={repo} user={user} onOpen={go} toast={showToast} />;
+    screen = <TripsScreen key={user.id} repo={repo} user={user} profile={profile} onProfileChange={setProfile} onOpen={go} toast={showToast} />;
   }
 
   return (
