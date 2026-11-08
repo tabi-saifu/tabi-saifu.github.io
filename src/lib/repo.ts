@@ -7,8 +7,9 @@ export interface User {
   verified: boolean;
 }
 
+/** 一覧用。expenses は自分が負担する分（割り勘は自分の取り分）だけ */
 export type TripWithItems = Trip & { expenses: { amount_jpy: number; payment: Payment }[] };
-export type TripInput = Omit<Trip, 'id'>;
+export type TripInput = Omit<Trip, 'id' | 'group'>;
 export type ExpenseInput = Omit<Expense, 'id' | 'amount_jpy'>;
 export type AuthEvent = { user: User | null };
 
@@ -25,14 +26,18 @@ export interface Repo {
   refreshUser(): Promise<User | null>;
 
   listTrips(): Promise<TripWithItems[]>;
-  createTrip(input: TripInput): Promise<Trip>;
-  updateTrip(id: string, input: TripInput): Promise<void>;
-  deleteTrip(id: string): Promise<void>;
+  /** group を渡すと、みんなで使う旅行（割り勘あり）を作る。name は仲間に見える自分の呼び名 */
+  createTrip(input: TripInput, group?: { name: string }): Promise<Trip>;
+  updateTrip(trip: Trip, input: TripInput): Promise<void>;
+  /** ひとり旅は削除、みんなの旅行は自分だけ抜ける */
+  deleteTrip(trip: Trip): Promise<void>;
+  /** 招待コードで参加し、その旅行の id を返す */
+  joinGroup(code: string, name: string): Promise<string>;
 
-  listExpenses(tripId: string): Promise<Expense[]>;
-  addExpense(input: ExpenseInput): Promise<Expense>;
-  updateExpense(id: string, input: ExpenseInput): Promise<Expense>;
-  deleteExpense(tripId: string, id: string): Promise<void>;
+  listExpenses(trip: Trip): Promise<Expense[]>;
+  addExpense(trip: Trip, input: ExpenseInput): Promise<Expense>;
+  updateExpense(trip: Trip, before: Expense, input: ExpenseInput): Promise<Expense>;
+  deleteExpense(trip: Trip, expense: Expense): Promise<void>;
 }
 
 const MESSAGES: [RegExp, string][] = [
@@ -41,6 +46,7 @@ const MESSAGES: [RegExp, string][] = [
   [/too-many-requests|rate limit/i, '操作が集中しています。しばらく待ってからもう一度お試しください。'],
   [/weak-password|password should be/i, 'パスワードは8文字以上で、推測されにくいものにしてください。'],
   [/invalid-email/i, 'メールアドレスの形式を確認してください。'],
+  [/invite-not-found/i, '招待コードが見つかりません。6文字のコードをもう一度確かめてください。'],
   [/permission.denied/i, 'この操作はできません。メールの確認が済んでいるか確かめて、もう一度ログインしてください。'],
   [/network-request-failed|failed to fetch|network|offline/i, '通信できませんでした。電波の良い場所でもう一度お試しください。入力内容は残っています。'],
 ];
@@ -50,6 +56,15 @@ export function friendlyError(err: unknown) {
   const message = `${e?.code ?? ''} ${e?.message ?? String(err)}`;
   return MESSAGES.find(([re]) => re.test(message))?.[1] ?? 'うまくいきませんでした。もう一度お試しください。';
 }
+
+/** 紛らわしい文字（0/O、1/I など）を除いた6文字 */
+export function newInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  return [...bytes].map(b => chars[b % chars.length]).join('');
+}
+
+export const normalizeCode = (code: string) => code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 export const hasBackend = Boolean(import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_DATABASE_URL);
 export const isDemo = import.meta.env.VITE_DEMO === '1';

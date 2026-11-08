@@ -1,6 +1,17 @@
 export type Category = 'food' | 'shopping' | 'transport' | 'hotel' | 'sightseeing' | 'other';
 export type Payment = 'card' | 'cash';
 
+export interface Member {
+  uid: string;
+  name: string;
+}
+
+export interface GroupInfo {
+  /** 参加用の招待コード */
+  code: string;
+  members: Member[];
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -9,6 +20,15 @@ export interface Trip {
   start_date: string | null;
   end_date: string | null;
   card_fee_pct: number;
+  /** みんなで行く旅行なら参加者の情報。ひとり旅なら null */
+  group: GroupInfo | null;
+}
+
+export interface SharedInfo {
+  /** 立て替えた人 */
+  paid_by: string;
+  /** 均等に割る人 */
+  split: string[];
 }
 
 export interface Expense {
@@ -23,6 +43,8 @@ export interface Expense {
   rate_to_jpy: number;
   rate_date: string | null;
   amount_jpy: number;
+  /** 割り勘の出費なら立て替えた人と割る人。自分だけの出費なら null */
+  shared: SharedInfo | null;
 }
 
 export const CATEGORIES: { id: Category; label: string; icon: string; color: string }[] = [
@@ -81,6 +103,76 @@ export function byDay(items: Expense[]) {
   return [...days.entries()]
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([date, list]) => ({ date, items: list, jpy: totalJpy(list) }));
+}
+
+/** 割り勘1件の各人の負担額。1円未満の端数は uid 順に1円ずつ配る */
+export function sharesOf(e: Pick<Expense, 'amount_jpy' | 'shared'>) {
+  const shares = new Map<string, number>();
+  const split = [...(e.shared?.split ?? [])].sort();
+  if (!split.length) return shares;
+  const amount = Number(e.amount_jpy);
+  const base = Math.floor(amount / split.length);
+  let rest = amount - base * split.length;
+  for (const uid of split) {
+    shares.set(uid, base + (rest > 0 ? 1 : 0));
+    rest -= 1;
+  }
+  return shares;
+}
+
+/** 自分が実際に負担する分だけに直した明細（自分だけの出費＋割り勘の自分の取り分） */
+export function myBurden(items: Expense[], uid: string): Expense[] {
+  return items
+    .map(e => (e.shared ? { ...e, amount_jpy: sharesOf(e).get(uid) ?? 0 } : e))
+    .filter(e => e.amount_jpy > 0);
+}
+
+export interface Balance extends Member {
+  /** 立て替えた合計 */
+  paid: number;
+  /** 本来の負担の合計 */
+  owed: number;
+  /** 多く払っている額（マイナスなら払い足りない） */
+  net: number;
+}
+
+/** 割り勘の出費について、誰がどれだけ多く払っているか */
+export function balances(items: Expense[], members: Member[]): Balance[] {
+  const rows = new Map<string, Balance>(members.map(m => [m.uid, { ...m, paid: 0, owed: 0, net: 0 }]));
+  const row = (uid: string) => {
+    if (!rows.has(uid)) rows.set(uid, { uid, name: '抜けたメンバー', paid: 0, owed: 0, net: 0 });
+    return rows.get(uid)!;
+  };
+  for (const e of items) {
+    if (!e.shared) continue;
+    row(e.shared.paid_by).paid += Number(e.amount_jpy);
+    for (const [uid, share] of sharesOf(e)) row(uid).owed += share;
+  }
+  return [...rows.values()].map(r => ({ ...r, net: r.paid - r.owed }));
+}
+
+export interface Transfer {
+  from: Member;
+  to: Member;
+  amount: number;
+}
+
+/** 精算に必要な支払い。払い足りない人から多く払った人へ、回数が少なくなるように組む */
+export function settlements(rows: Balance[]): Transfer[] {
+  const debtors = rows.filter(r => r.net < 0).map(r => ({ ...r, left: -r.net })).sort((a, b) => b.left - a.left);
+  const creditors = rows.filter(r => r.net > 0).map(r => ({ ...r, left: r.net })).sort((a, b) => b.left - a.left);
+  const out: Transfer[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const amount = Math.min(debtors[i].left, creditors[j].left);
+    if (amount > 0) out.push({ from: debtors[i], to: creditors[j], amount });
+    debtors[i].left -= amount;
+    creditors[j].left -= amount;
+    if (debtors[i].left === 0) i += 1;
+    if (creditors[j].left === 0) j += 1;
+  }
+  return out;
 }
 
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];

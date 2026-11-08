@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { totalJpy, yen, type Expense, type Trip } from '../lib/calc';
+import { balances, categoryOf, myBurden, settlements, totalJpy, yen, type Expense, type Trip } from '../lib/calc';
 import { downloadPdf, gmailAvailable, looksLikeGmail, MailError, preloadGoogle, sendViaGmail, sendViaMailApp, type MailContent } from '../lib/mail';
 import type { User } from '../lib/repo';
 import { ErrorNote, Sheet, type ToastFn } from './ui';
@@ -18,17 +18,31 @@ export function ReportSheet({ trip, expenses, user, onClose, toast }: {
     if (gmailAvailable) preloadGoogle().catch(() => {});
   }, []);
 
-  const total = totalJpy(expenses);
+  // みんなの旅行では、自分の負担分（自分だけの出費＋割り勘の取り分）をレポートにする
+  const items = trip.group
+    ? myBurden(expenses, user.id).map(e => (e.shared ? { ...e, title: `[割り勘] ${e.title || categoryOf(e.category).label}` } : e))
+    : expenses;
+  const settleLines = trip.group
+    ? settlements(balances(expenses, trip.group.members)).map(t => `${t.from.name} → ${t.to.name}　${yen(t.amount)}`)
+    : [];
+  const total = totalJpy(items);
   const gmailFirst = gmailAvailable && looksLikeGmail(user.email);
 
   async function content(): Promise<MailContent> {
     // PDF 部品は重いので、旅先の通信量を増やさないよう必要になってから読み込む
     const { buildReportPdf, reportFilename } = await import('../lib/pdf');
-    const pdf = await buildReportPdf(trip, expenses, user.email);
+    const pdf = await buildReportPdf(trip, items, user.email, trip.group ? (settleLines.length ? settleLines : ['貸し借りはありません']) : []);
     return {
       to: user.email,
       subject: `【たびさいふ】${trip.name} の旅行費用レポート（合計 ${yen(total)}）`,
-      body: `${trip.name} の旅行費用レポートです。\n合計: ${yen(total)}（${expenses.length}件）\n\n詳しくは添付のPDFをご覧ください。\n実際の請求額はカード会社の換算レートや手数料により異なります。`,
+      body: [
+        `${trip.name} の旅行費用レポートです。`,
+        `${trip.group ? 'あなたの負担' : '合計'}: ${yen(total)}（${items.length}件）`,
+        ...(trip.group ? ['', '割り勘の精算:', ...(settleLines.length ? settleLines : ['貸し借りはありません'])] : []),
+        '',
+        '詳しくは添付のPDFをご覧ください。',
+        '実際の請求額はカード会社の換算レートや手数料により異なります。',
+      ].join('\n'),
       filename: reportFilename(trip),
       pdf,
     };
@@ -77,7 +91,7 @@ export function ReportSheet({ trip, expenses, user, onClose, toast }: {
     <Sheet title="レポートを受け取る" onClose={onClose}>
       <div className="stack">
         <div className="report-card">
-          <small>{trip.name}（{expenses.length}件）</small>
+          <small>{trip.name}（{trip.group ? 'あなたの負担・' : ''}{items.length}件）</small>
           <strong className="num">{yen(total)}</strong>
           <small>送り先: <b>{user.email}</b></small>
           <small>送信元もあなた自身のメールです。ほかの宛先には送られません。</small>

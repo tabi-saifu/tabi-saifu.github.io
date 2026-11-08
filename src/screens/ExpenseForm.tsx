@@ -5,17 +5,30 @@ import { getRates, type RateTable } from '../lib/rates';
 import { friendlyError, type Repo } from '../lib/repo';
 import { ConfirmButton, ErrorNote, Sheet, type ToastFn } from './ui';
 
-export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose, onSaved, onDeleted, toast }: {
+export function ExpenseForm({ repo, trip, me, defaultShared, expense, rates, lastCurrency, onClose, onSaved, onDeleted, toast }: {
   repo: Repo;
   trip: Trip;
+  me: string;
+  defaultShared: boolean;
   expense?: Expense;
   rates: RateTable | null;
   lastCurrency: string;
   onClose: () => void;
-  onSaved: (e: Expense, isNew: boolean) => void;
+  /** before は直す前の記録。新しく記録したときは undefined */
+  onSaved: (e: Expense, before?: Expense) => void;
   onDeleted: (id: string) => void;
   toast: ToastFn;
 }) {
+  const members = trip.group?.members ?? [];
+  const [sharedMode, setSharedMode] = useState(expense ? Boolean(expense.shared) : defaultShared);
+  const [paidBy, setPaidBy] = useState(expense?.shared?.paid_by ?? me);
+  const [split, setSplit] = useState<Set<string>>(new Set(expense?.shared?.split ?? members.map(m => m.uid)));
+  const toggleSplit = (uid: string) => setSplit(prev => {
+    const next = new Set(prev);
+    if (next.has(uid)) next.delete(uid);
+    else next.add(uid);
+    return next;
+  });
   const [amountText, setAmountText] = useState(expense ? String(expense.amount_local) : '');
   const [currency, setCurrency] = useState(expense?.currency ?? lastCurrency);
   const [category, setCategory] = useState<Category>(expense?.category ?? 'shopping');
@@ -55,6 +68,11 @@ export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose,
       setError('相場を取得できませんでした。下の「1通貨あたりの円」を入力してください。');
       return;
     }
+    const shared = trip.group && sharedMode ? { paid_by: paidBy, split: members.map(m => m.uid).filter(uid => split.has(uid)) } : null;
+    if (shared && shared.split.length === 0) {
+      setError('割り勘する人を1人以上選んでください。');
+      return;
+    }
     setBusy(true);
     const input = {
       trip_id: trip.id,
@@ -66,10 +84,11 @@ export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose,
       currency,
       rate_to_jpy: rate,
       rate_date: usingLive ? table?.date ?? null : expense?.rate_date ?? null,
+      shared,
     };
     try {
-      const saved = expense ? await repo.updateExpense(expense.id, input) : await repo.addExpense(input);
-      onSaved(saved, !expense);
+      const saved = expense ? await repo.updateExpense(trip, expense, input) : await repo.addExpense(trip, input);
+      onSaved(saved, expense);
       if (keepOpen) {
         toast(`${yen(saved.amount_jpy)} を記録しました`);
         setAmountText('');
@@ -90,7 +109,7 @@ export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose,
     if (!expense) return;
     setBusy(true);
     try {
-      await repo.deleteExpense(expense.trip_id, expense.id);
+      await repo.deleteExpense(trip, expense);
       onDeleted(expense.id);
       toast('削除しました');
       onClose();
@@ -133,6 +152,38 @@ export function ExpenseForm({ repo, trip, expense, rates, lastCurrency, onClose,
             {!usingLive && rate && (expense ? '・記録時の相場' : '・手入力')}
           </p>
         </div>
+
+        {trip.group && (
+          <div className="stack split-box">
+            <div className="segmented" role="group" aria-label="割り勘か自分だけか">
+              <button type="button" className={sharedMode ? 'on' : ''} aria-pressed={sharedMode} onClick={() => setSharedMode(true)}>👥 みんなで割り勘</button>
+              <button type="button" className={!sharedMode ? 'on' : ''} aria-pressed={!sharedMode} onClick={() => setSharedMode(false)}>🔒 自分だけ</button>
+            </div>
+            {sharedMode ? (
+              <>
+                <label className="field">
+                  <span>立て替えた人</span>
+                  <select value={paidBy} onChange={e => setPaidBy(e.target.value)}>
+                    {members.map(m => <option key={m.uid} value={m.uid}>{m.uid === me ? `${m.name}（あなた）` : m.name}</option>)}
+                  </select>
+                </label>
+                <fieldset className="field">
+                  <legend>割り勘する人（均等に割ります）</legend>
+                  <div className="chips">
+                    {members.map(m => (
+                      <button type="button" key={m.uid} className={`chip ${split.has(m.uid) ? 'on' : ''}`} aria-pressed={split.has(m.uid)} onClick={() => toggleSplit(m.uid)}>
+                        {split.has(m.uid) ? '✓ ' : ''}{m.uid === me ? `${m.name}（あなた）` : m.name}
+                      </button>
+                    ))}
+                  </div>
+                  {jpy !== null && split.size > 0 && <small className="hint num">1人あたり 約{yen(Math.ceil(jpy / split.size))}</small>}
+                </fieldset>
+              </>
+            ) : (
+              <small className="hint">この記録は、一緒に行く人には見えません。</small>
+            )}
+          </div>
+        )}
 
         <fieldset className="field">
           <legend>何に使いましたか？</legend>

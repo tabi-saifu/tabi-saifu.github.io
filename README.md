@@ -12,8 +12,8 @@
 | --- | --- | --- |
 | 画面 | React + Vite（静的サイト） | GitHub Pages で配信。サーバーを持たない |
 | ログイン | Firebase Authentication | メールアドレスとパスワード。メール確認が済むまでデータに触れない |
-| DB | Firebase Realtime Database | `tabi_saifu/users/{uid}` の下だけを使う |
-| 利用者の分離 | `database.rules.json` | 本人の uid の場所しか読み書きできない |
+| DB | Firebase Realtime Database | 個人の記録は `tabi_saifu/users/{uid}`、みんなの旅行（割り勘）は `tabi_saifu/groups/{id}` |
+| 利用者の分離 | `database.rules.json`（`scripts/build_rules.py` で生成） | 個人の場所は本人だけ、みんなの旅行は招待コードで参加した人だけが読み書きできる |
 | 相場 | open.er-api.com（予備: Frankfurter） | キー不要。1日1回更新の相場 |
 | PDF | pdf-lib（ブラウザ内で生成） | 日本語フォントは `npm run assets` で生成 |
 | 自分宛てメール | Gmail API（ブラウザから直接）/ 端末のメールアプリ | 送信用アドレスを持たない。トークンは保存しない |

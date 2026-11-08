@@ -205,6 +205,7 @@ input:focus { border-color: var(--ink); outline: none; }
 }
 .dock > * { max-width: 528px; margin: 0 auto; display: block; }
 .dock.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 10px; }
+.dock.two .ghost { padding: 0 8px; font-size: 0.875rem; white-space: nowrap; }
 @media (min-width: 592px) {
   .dock.two { padding-left: calc(50vw - 264px); padding-right: calc(50vw - 264px); }
 }
@@ -313,6 +314,35 @@ input:focus { border-color: var(--ink); outline: none; }
 .report-card small { color: var(--hero-muted); overflow-wrap: anywhere; }
 .report-card b { color: var(--hero-ink); }
 .notice p + button { margin-top: 2px; overflow-wrap: anywhere; text-align: left; }
+
+/* みんなの旅行 */
+.badge { display: inline-block !important; margin-top: 4px; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--stamp); font-weight: 600; font-size: 0.75rem; }
+.tabs { margin: 10px 0 4px; }
+.tab-note { margin: 6px 4px 0; }
+.chip.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.split-box { background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px; gap: 12px; }
+.item-jpy small { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--muted); text-align: right; }
+
+.settle { background: var(--card); border-radius: var(--radius); padding: 14px; margin-top: 10px; display: grid; gap: 10px; }
+.settle h3 { font-size: 0.9375rem; }
+.settle-rows { display: grid; gap: 8px; }
+.settle-rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; align-items: baseline; }
+.settle-name { font-weight: 700; overflow-wrap: anywhere; }
+.settle-detail { grid-column: 1; color: var(--muted); font-size: 0.75rem; }
+.settle-net { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 0.875rem; }
+.settle-net.plus { color: var(--ok-ink); }
+.settle-net.minus { color: var(--stamp); }
+.settle-plan { border-top: 2px dashed var(--line); padding-top: 10px; display: grid; gap: 2px; }
+.settle-plan-title { color: var(--muted); font-size: 0.8125rem; font-weight: 600; }
+.settle-empty { margin: 10px 4px 0; }
+
+.invite { background: var(--card); border-radius: var(--radius); padding: 14px; display: grid; gap: 6px; }
+.invite-label { color: var(--muted); font-size: 0.8125rem; font-weight: 600; }
+.invite-code { font-size: 2rem; font-weight: 800; letter-spacing: 0.18em; }
+.invite .link { justify-self: start; }
+.member-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.member-chips li { padding: 2px 10px; border-radius: 12px; background: var(--paper); font-size: 0.875rem; overflow-wrap: anywhere; }
+.code-input { font-size: 1.5rem !important; letter-spacing: 0.2em; text-transform: uppercase; }
 
 .toast {
   position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);

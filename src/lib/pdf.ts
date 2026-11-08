@@ -21,7 +21,8 @@ const fetchFont = async (name: string) => {
 
 export const reportFilename = (trip: Trip) => `たびさいふ_${trip.name.replace(/[\\/:*?"<>|]/g, '')}.pdf`;
 
-export async function buildReportPdf(trip: Trip, expenses: Expense[], email: string) {
+/** settle を渡すと「割り勘の精算」の欄を付ける（みんなの旅行用） */
+export async function buildReportPdf(trip: Trip, expenses: Expense[], email: string, settle: string[] = []) {
   const [regBytes, boldBytes] = await Promise.all([fetchFont('NotoSansJP-Regular'), fetchFont('NotoSansJP-Bold')]);
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -72,7 +73,7 @@ export async function buildReportPdf(trip: Trip, expenses: Expense[], email: str
   text(trip.name, M, H - 72, 20, bold);
   const meta = [countryByCode(trip.country_code)?.name, periodLabel(trip)].filter(Boolean).join('　');
   text(meta, M, H - 90, 9.5, reg, MUTED);
-  text('使った金額の合計（記録時の相場で円換算）', M, H - 118, 9, reg, MUTED);
+  text(trip.group ? 'あなたの負担額（自分だけの出費＋割り勘の取り分）' : '使った金額の合計（記録時の相場で円換算）', M, H - 118, 9, reg, MUTED);
   text(yen(total), M, H - 150, 28, bold);
   right('カード手数料を含めた目安', W - M, H - 122, 8.5, reg, MUTED);
   right(yen(estimate), W - M, H - 142, 16, bold);
@@ -131,6 +132,19 @@ export async function buildReportPdf(trip: Trip, expenses: Expense[], email: str
   }
 
   // 注記とページ番号
+  if (settle.length) {
+    ensure(40 + settle.length * 15);
+    text('割り勘の精算', M, y, 11, bold);
+    y -= 8;
+    rule(y, INK, 0.8);
+    y -= 16;
+    for (const line of settle) {
+      text(line, M + 8, y, 10);
+      y -= 15;
+    }
+    y -= 10;
+  }
+
   ensure(40);
   const notes = [
     '円換算は記録したときの相場による目安です。実際の請求額はカード会社の換算レートや手数料により異なります。',

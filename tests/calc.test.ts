@@ -1,10 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { byCategory, byDay, cardEstimate, parseAmount, toJpy, totalJpy, type Expense } from '../src/lib/calc';
+import { balances, byCategory, byDay, cardEstimate, myBurden, parseAmount, settlements, sharesOf, toJpy, totalJpy, type Expense } from '../src/lib/calc';
 import { buildMime, sameMailbox } from '../src/lib/mail';
 
 const e = (over: Partial<Expense>): Expense => ({
   id: '1', trip_id: 't', spent_on: '2026-05-01', title: '', category: 'food', payment: 'card',
-  amount_local: 10, currency: 'EUR', rate_to_jpy: 180, rate_date: null, amount_jpy: 1800, ...over,
+  amount_local: 10, currency: 'EUR', rate_to_jpy: 180, rate_date: null, amount_jpy: 1800, shared: null, ...over,
+});
+
+describe('割り勘', () => {
+  const A = { uid: 'a', name: 'はなこ' };
+  const B = { uid: 'b', name: 'じろう' };
+  const C = { uid: 'c', name: 'さぶろう' };
+  const split = (paid_by: string, members: string[], amount_jpy: number) => e({ amount_jpy, shared: { paid_by, split: members } });
+
+  it('均等に割り、1円の端数も合計が元の金額に一致する', () => {
+    const s = sharesOf(split('a', ['a', 'b', 'c'], 1000));
+    expect([...s.values()].reduce((x, y) => x + y, 0)).toBe(1000);
+    expect([...s.values()].sort()).toEqual([333, 333, 334]);
+  });
+
+  it('自分の負担は「自分だけの出費」と「割り勘の取り分」の合計', () => {
+    const items = [e({ amount_jpy: 500 }), split('b', ['a', 'b'], 3000), split('a', ['b'], 800)];
+    expect(totalJpy(myBurden(items, 'a'))).toBe(500 + 1500);
+  });
+
+  it('だれがどれだけ多く払っているかと、精算の支払い', () => {
+    const items = [split('a', ['a', 'b', 'c'], 9000), split('b', ['a', 'b', 'c'], 3000), e({ amount_jpy: 99999 })];
+    const rows = balances(items, [A, B, C]);
+    expect(rows.map(r => [r.name, r.paid, r.owed, r.net])).toEqual([
+      ['はなこ', 9000, 4000, 5000],
+      ['じろう', 3000, 4000, -1000],
+      ['さぶろう', 0, 4000, -4000],
+    ]);
+    expect(rows.reduce((s, r) => s + r.net, 0)).toBe(0);
+    expect(settlements(rows).map(t => [t.from.name, t.to.name, t.amount])).toEqual([
+      ['さぶろう', 'はなこ', 4000],
+      ['じろう', 'はなこ', 1000],
+    ]);
+  });
+
+  it('全員が同じだけ払っていれば精算はない', () => {
+    const items = [split('a', ['a', 'b'], 2000), split('b', ['a', 'b'], 2000)];
+    expect(settlements(balances(items, [A, B]))).toEqual([]);
+  });
 });
 
 describe('金額の入力', () => {
