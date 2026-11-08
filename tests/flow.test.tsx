@@ -45,7 +45,7 @@ describe('利用の流れ', () => {
     await screen.findByText('最初の旅行を登録しましょう');
 
     // 都市名で国を探し、通貨が自動で決まる
-    click('＋ 新しい旅行を登録');
+    click('＋ 旅行を登録');
     fireEvent.change(await screen.findByPlaceholderText(/国名や都市名/), { target: { value: 'パリ' } });
     click(/フランス/);
     expect((await screen.findByText(/1EUR = 200円/))).toBeTruthy();
@@ -119,7 +119,7 @@ describe('利用の流れ', () => {
     // はなこ: みんなの旅行を作る
     await logout();
     await login('hanako@example.com');
-    click('＋ 新しい旅行を登録');
+    click('＋ 旅行を登録');
     fireEvent.change(await screen.findByPlaceholderText(/国名や都市名/), { target: { value: 'ソウル' } });
     click(/韓国/);
     click('みんなで（割り勘あり）');

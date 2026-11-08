@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { friendlyError, type Repo, type User } from '../lib/repo';
+import { AirmailArt } from './art';
 import { ErrorNote } from './ui';
 
 /** メールアドレスの確認が済むまで表示する。他人のアドレスでの登録を防ぐため */
@@ -39,7 +40,7 @@ export function VerifyScreen({ repo, user, onVerified }: { repo: Repo; user: Use
   return (
     <main className="auth">
       <div className="auth-hero">
-        <div className="stamp" aria-hidden="true">✉</div>
+        <AirmailArt className="auth-art" />
         <h2 className="auth-title">メールを確認してください</h2>
         <p><b className="mail">{user.email}</b> に確認メールを送りました。メール内のリンクを押したら、下のボタンを押してください。</p>
       </div>

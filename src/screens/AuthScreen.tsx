@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { friendlyError, type Repo } from '../lib/repo';
+import { AirmailArt, Logo } from './art';
 import { ErrorNote } from './ui';
 
 type Mode = 'login' | 'signup' | 'reset';
@@ -53,8 +54,8 @@ export function AuthScreen({ repo }: { repo: Repo }) {
   return (
     <main className="auth">
       <div className="auth-hero">
-        <div className="stamp" aria-hidden="true">¥</div>
-        <h1 className="brand">たびさいふ</h1>
+        <AirmailArt className="auth-art" />
+        <h1 className="brand"><Logo size={34} />たびさいふ</h1>
         <p>海外で使ったお金を、その場で日本円に。<br />帰ってからのカード請求に、もう驚かない。</p>
       </div>
 
@@ -66,7 +67,7 @@ export function AuthScreen({ repo }: { repo: Repo }) {
       )}
       {mode === 'reset' && <h2 className="auth-title">パスワードの再設定</h2>}
 
-      <form onSubmit={submit} className="stack">
+      <form onSubmit={submit} className="stack panel">
         <label className="field">
           <span>メールアドレス</span>
           <input type="email" inputMode="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com" />

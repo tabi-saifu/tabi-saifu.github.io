@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   balances, byCategory, byDay, cardEstimate, categoryOf, dayLabel, money, myBurden, periodLabel, rateText, settlements,
   sharesOf, totalJpy, yen, type Expense, type Trip,
@@ -9,6 +9,7 @@ import { friendlyError, type Repo, type User } from '../lib/repo';
 import { ExpenseForm } from './ExpenseForm';
 import { ReportSheet } from './ReportSheet';
 import { TripForm } from './TripForm';
+import { Avatar } from './art';
 import { ErrorNote, type ToastFn } from './ui';
 
 type Tab = 'shared' | 'mine';
@@ -27,11 +28,12 @@ function SettleCard({ trip, expenses, me }: { trip: Trip; expenses: Expense[]; m
       <ul className="settle-rows">
         {rows.map(r => (
           <li key={r.uid}>
-            <span className="settle-name">{nameOf(r.uid, r.name)}</span>
-            <span className="settle-detail num">払った {yen(r.paid)} ・ 負担 {yen(r.owed)}</span>
+            <Avatar uid={r.uid} name={r.name} size={34} />
+            <span className="settle-name">{r.name}{r.uid === me && <small className="me-tag">あなた</small>}</span>
             <strong className={`settle-net num ${r.net > 0 ? 'plus' : r.net < 0 ? 'minus' : ''}`}>
               {r.net > 0 ? `${yen(r.net)} 多く払っている` : r.net < 0 ? `${yen(-r.net)} 少ない` : 'ちょうど'}
             </strong>
+            <span className="settle-detail num">払った {yen(r.paid)}・負担 {yen(r.owed)}</span>
           </li>
         ))}
       </ul>
@@ -134,6 +136,12 @@ export function TripScreen({ repo, user, tripId, onBack, toast }: {
 
       <section className="hero">
         <p className="hero-trip"><span aria-hidden="true">{flag(trip.country_code)}</span> {trip.name}{periodLabel(trip) && <small>{periodLabel(trip)}</small>}</p>
+        {group && (
+          <p className="hero-members" aria-label={`参加している人: ${group.members.map(m => m.name).join('、')}`}>
+            {group.members.slice(0, 6).map(m => <Avatar key={m.uid} uid={m.uid} name={m.name} size={26} />)}
+            <small>{group.members.length}人で旅行中</small>
+          </p>
+        )}
         <p className="hero-label">{group ? 'あなたが負担する金額（自分だけ＋割り勘の取り分）' : 'ここまでに使った金額'}</p>
         <p className="hero-total num" data-testid="total">{yen(total)}</p>
         {total > 0 && estimate !== total && (
@@ -196,17 +204,17 @@ export function TripScreen({ repo, user, tripId, onBack, toast }: {
                   return (
                     <li key={e.id}>
                       <button className="item" onClick={() => setEditing(e)}>
-                        <span className="item-icon" aria-hidden="true">{c.icon}</span>
+                        <span className="item-icon" aria-hidden="true" style={{ '--cat': c.color } as CSSProperties}>{c.icon}</span>
                         <span className="item-main">
                           <strong>{e.title || c.label}</strong>
                           <small className="num">
                             {money(e.amount_local, e.currency)}・
-                            {e.shared ? `${nameOf(e.shared.paid_by)}が立て替え・${e.shared.split.length}人で割り勘` : e.payment === 'card' ? 'カード' : '現金'}
+                            {e.shared ? `${nameOf(e.shared.paid_by)}が立替・${e.shared.split.length}人で割り勘` : e.payment === 'card' ? 'カード' : '現金'}
                           </small>
                         </span>
                         <span className="item-jpy num">
                           {yen(e.amount_jpy)}
-                          {myShare !== null && <small>あなたの負担 {yen(myShare)}</small>}
+                          {myShare !== null && <small>負担 {yen(myShare)}</small>}
                         </span>
                       </button>
                     </li>

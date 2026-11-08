@@ -156,7 +156,7 @@ export function ExpenseForm({ repo, trip, me, defaultShared, expense, rates, las
         {trip.group && (
           <div className="stack split-box">
             <div className="segmented" role="group" aria-label="割り勘か自分だけか">
-              <button type="button" className={sharedMode ? 'on' : ''} aria-pressed={sharedMode} onClick={() => setSharedMode(true)}>👥 みんなで割り勘</button>
+              <button type="button" className={sharedMode ? 'on' : ''} aria-pressed={sharedMode} onClick={() => setSharedMode(true)}>👥 割り勘</button>
               <button type="button" className={!sharedMode ? 'on' : ''} aria-pressed={!sharedMode} onClick={() => setSharedMode(false)}>🔒 自分だけ</button>
             </div>
             {sharedMode ? (

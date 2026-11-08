@@ -352,3 +352,95 @@ input:focus { border-color: var(--ink); outline: none; }
   max-width: calc(100vw - 32px); width: max-content;
   animation: rise 0.18s ease-out;
 }
+
+/* ===== 画面の揺れ・はみ出し対策 ===== */
+/* 横方向には動かさない（上下のスクロールだけ） */
+html, body { overflow-x: hidden; overflow-x: clip; }
+/* シートを開いている間は背景を動かさない */
+body:has(dialog[open]) { overflow: hidden; }
+.sheet { overflow-x: hidden; overscroll-behavior: contain; touch-action: pan-y; box-sizing: border-box; max-width: min(560px, 100vw); }
+.sheet * { min-width: 0; }
+/* iPhone の日付入力は幅を譲らないので、枠に収める */
+input[type='date'] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; display: block; text-align: left; }
+input[type='date']::-webkit-date-and-time-value { text-align: left; }
+.row > * { min-width: 0; }
+.row input[type='date'] { padding: 0 10px; }
+/* ボタンの文字は枠からはみ出さず、必要なら2行に収める */
+.primary, .ghost, .danger { line-height: 1.25; padding: 8px 16px; overflow-wrap: anywhere; }
+.dock.two { grid-template-columns: auto minmax(0, 1fr); }
+.dock.two .ghost { padding: 8px 14px; font-size: 0.875rem; white-space: nowrap; }
+.sheet-actions { grid-template-columns: auto minmax(0, 1fr); }
+.sheet-actions .ghost, .sheet-actions .danger { padding: 8px 14px; white-space: nowrap; }
+.segmented button { padding: 4px 6px; line-height: 1.3; overflow-wrap: anywhere; }
+.chip { max-width: 100%; overflow-wrap: anywhere; }
+.danger.armed { white-space: normal; }
+
+/* ===== 仕上げ（エアメールと旅券のモチーフ） ===== */
+:root { --display: 'Zen Maru Gothic', var(--font); --shadow: 0 1px 0 var(--line), 0 12px 28px -20px rgb(20 35 63 / 0.55); }
+.brand, h1, h2, .hero-total, .invite-code, .report-card strong, .ticket-stub strong, .amount-jpy strong { font-family: var(--display); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.logo { flex: none; }
+
+.auth { padding-top: 24px; }
+.auth-hero { justify-items: center; text-align: center; gap: 4px; }
+.auth-art { width: min(260px, 80%); height: auto; margin-bottom: 4px; }
+.panel { background: var(--card); border-radius: 20px; padding: 18px 16px; box-shadow: var(--shadow); }
+
+.greeting { margin: 4px 0 14px; }
+.greeting h2 { font-size: 1.5rem; letter-spacing: 0.02em; }
+.greeting .whoami { margin: 0; }
+.ticket { box-shadow: var(--shadow); transition: transform 0.15s ease; }
+.ticket:active { transform: scale(0.985); }
+.ticket-flag { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--paper); font-size: 1.6rem; }
+.ticket-route { display: flex !important; align-items: center; gap: 6px; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 2px; }
+.ticket-route i { font-style: normal; color: var(--stamp); }
+.empty-art { width: min(220px, 70%); height: auto; }
+
+.hero { background-image: radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1.4px); background-size: 14px 14px; box-shadow: var(--shadow); }
+.hero::after {
+  content: ''; position: absolute; right: -36px; bottom: -40px; width: 150px; height: 150px; border-radius: 50%;
+  border: 3px solid rgb(255 255 255 / 0.08); box-shadow: inset 0 0 0 12px rgb(255 255 255 / 0.04);
+  pointer-events: none;
+}
+.hero-members { display: flex; align-items: center; margin-top: 8px; }
+.hero-members .avatar { margin-right: -6px; box-shadow: 0 0 0 2px var(--hero); }
+.hero-members small { margin-left: 14px; color: var(--hero-muted); }
+.day ul { box-shadow: var(--shadow); }
+.item-icon {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; font-size: 1.15rem;
+  background: color-mix(in srgb, var(--cat, var(--c-other)) 18%, var(--card));
+}
+.item-jpy { text-align: right; }
+
+.avatar { display: inline-grid; place-items: center; flex: none; border-radius: 50%; color: #fff; font-weight: 800; font-family: var(--display); line-height: 1; }
+/* 精算の行は「アイコン｜名前と差額を縦に」で、狭い画面でも詰まらない */
+.settle-rows li { grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: center; }
+.settle-rows .avatar { grid-row: 1 / span 3; align-self: start; }
+.settle-name { grid-column: 2; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.settle-net { grid-column: 2; grid-row: auto; justify-self: start; font-size: 0.9375rem; }
+.settle-detail { grid-column: 2; }
+.me-tag { font-size: 0.6875rem; font-weight: 700; padding: 1px 7px; border-radius: 8px; background: var(--accent-soft); color: var(--stamp); }
+.member-chips li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; }
+.settle { box-shadow: var(--shadow); }
+
+.sheet-body::before { content: ''; display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 2px auto 6px; }
+.sheet-head h2 { font-size: 1.1875rem; }
+
+/* 下のボタン帯はすりガラスに */
+.dock { background: color-mix(in srgb, var(--paper) 82%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.primary { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent)); }
+
+/* 幅の狭いスマホ（320〜360px）では詰めて並べる */
+@media (max-width: 360px) {
+  .page { padding-left: 12px; padding-right: 12px; }
+  .topbar-actions { gap: 10px; font-size: 0.875rem; }
+  .brand.small { font-size: 1rem; gap: 6px; }
+  .ticket-main { gap: 10px; padding: 14px 8px 14px 16px; }
+  .ticket-flag { width: 36px; height: 36px; font-size: 1.25rem; }
+  .ticket-stub { min-width: 96px; padding: 14px 10px; }
+  .ticket-stub strong { font-size: 1rem; }
+  .ticket-main strong { font-size: 1rem; }
+  .hero-total { font-size: 2.25rem; }
+  .cat { font-size: 0.875rem; gap: 4px; }
+  .auth-hero p { font-size: 0.8125rem; }
+}

@@ -3,6 +3,7 @@ import { rateText, type Trip } from '../lib/calc';
 import { COUNTRIES, POPULAR, countryByCode, currencyLabel, flag, searchCountries, type Country } from '../lib/countries';
 import { getRates, type RateTable } from '../lib/rates';
 import { friendlyError, type Repo, type User } from '../lib/repo';
+import { Avatar } from './art';
 import { ConfirmButton, ErrorNote, Sheet, type ToastFn } from './ui';
 
 export const defaultNickname = (user: User) => user.email.split('@')[0].slice(0, 20);
@@ -19,7 +20,7 @@ function InviteBox({ trip, toast }: { trip: Trip; toast: ToastFn }) {
       <button type="button" className="link" onClick={copy}>コードをコピー</button>
       <p className="invite-label">参加している人（{trip.group.members.length}人）</p>
       <ul className="member-chips">
-        {trip.group.members.map(m => <li key={m.uid}>{m.name}</li>)}
+        {trip.group.members.map(m => <li key={m.uid}><Avatar uid={m.uid} name={m.name} size={22} />{m.name}</li>)}
       </ul>
     </div>
   );
